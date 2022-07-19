@@ -139,9 +139,13 @@ for(n.drop in 1:max.drop){
   
 }
 hist(skew) #skewnesss changes +/- 0.1
+quantile(skew, c(0.025, 0.975))
 hist(pval) #pval doesn't change
 hist(hshmTP)
+quantile(hshmTP, c(0.025, 0.975))
 hist(hshmFP)
+quantile(hshmFP, c(0.025, 0.975))
+
 
 #now dropping by date
 
@@ -187,7 +191,10 @@ for(n.drop in 1:max.drop){
 }
 
 hist(skew) ##biggggg differences in skew
+quantile(skew, c(0.025, 0.975))
 hist(pval) ##biggggg changes in pvalue possible
 mean(pval>0.95) ##but these changes are rare! > 96% of the time we say there are positive HSHM
 hist(hshmTP)
+quantile(hshmTP, c(0.025,0.5,0.975))
 hist(hshmFP)
+quantile(hshmFP, c(0.025,0.5,0.975))
