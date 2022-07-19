@@ -49,6 +49,7 @@ canaan.hshm <- canaan[hshmid_canaan5cm_ref.normal,]
 table(canaan.hshm$DATE)
 table(canaan.hshm$ELEV, canaan.hshm$VEG)
 
+#add 20 cm data
 
 ## Cayman islands seagrass NEP --------------------------------------------------------------------
 cayman <- cayman.raw
@@ -103,7 +104,12 @@ drop.by<-as.character(unique(swan$Site))
 nn<-NULL
 skew<-NULL
 pval<-NULL
+hshmTP <- NULL
+hshmFP <- NULL
 hshmobs<-list()
+
+orig.inds <- 1:nrow(swan)
+orig.hshm <- orig.inds[hshmid_swanDO]
 
 for(n.drop in 1:max.drop){
   
@@ -113,22 +119,29 @@ for(n.drop in 1:max.drop){
   else{nreps = choose(length(drop.by), n.drop)}
   
   for(rep in 1:nreps){
+    
     drop<-sample(drop.by, n.drop, replace=FALSE)
+    orig.inds.ii <- orig.inds[!swan$Site %in% drop]
     
     tmpdat<-swan[!swan$Site %in% drop,]
     tmpHSHMtest<-hshmtest(tmpdat$DissolvedOxygen_Saturation, stat="skewness")
     tmpHSHMid<-hshmid(tmpdat$DissolvedOxygen_Saturation, criteria = "ref.normal",  side="upper", thresh=0.95)
     
     nn<-c(nn, n.drop)
-    skew<-c(skew, tmpHSHMtest$emp.skew)
+    skew<-c(skew, tmpHSHMtest$emp)
     pval<-c(pval, tmpHSHMtest$quantile)
+    hshmTP <- c(hshmTP, sum(orig.inds.ii[tmpHSHMid] %in% (orig.hshm[orig.hshm %in% orig.inds.ii]))/
+      sum(orig.hshm %in% orig.inds.ii))
+    hshmFP <- c(hshmFP, sum(!orig.inds.ii[tmpHSHMid] %in% (orig.hshm[orig.hshm %in% orig.inds.ii]))/
+                  sum(orig.hshm %in% orig.inds.ii))
     hshmobs<-c(hshmobs, tmpdat[tmpHSHMid,])
   }
   
 }
 hist(skew) #skewnesss changes +/- 0.1
 hist(pval) #pval doesn't change
-
+hist(hshmTP)
+hist(hshmFP)
 
 #now dropping by date
 
@@ -139,7 +152,12 @@ drop.by<-as.character(unique(swan$DOY))
 nn<-NULL
 skew<-NULL
 pval<-NULL
+hshmTP <- NULL
+hshmFP <- NULL
 hshmobs<-list()
+
+orig.inds <- 1:nrow(swan)
+orig.hshm <- orig.inds[hshmid_swanDO]
 
 for(n.drop in 1:max.drop){
   
@@ -150,14 +168,19 @@ for(n.drop in 1:max.drop){
   
   for(rep in 1:nreps){
     drop<-sample(drop.by, n.drop, replace=FALSE)
+    orig.inds.ii <- orig.inds[!swan$Site %in% drop]
     
     tmpdat<-swan[!swan$DOY %in% drop,]
     tmpHSHMtest<-hshmtest(tmpdat$DissolvedOxygen_Saturation, stat="skewness")
-    tmpHSHMid<-hshmid(tmpdat$DissolvedOxygen_Saturation, criteria = "ref.normal", side="both", thresh=0.95)
+    tmpHSHMid<-hshmid(tmpdat$DissolvedOxygen_Saturation, criteria = "ref.normal", side="upper", thresh=0.95)
     
     nn<-c(nn, n.drop)
-    skew<-c(skew, tmpHSHMtest$emp.skew)
+    skew<-c(skew, tmpHSHMtest$emp)
     pval<-c(pval, tmpHSHMtest$quantile)
+    hshmTP <- c(hshmTP, sum(orig.inds.ii[tmpHSHMid] %in% (orig.hshm[orig.hshm %in% orig.inds.ii]))/
+                  sum(orig.hshm %in% orig.inds.ii))
+    hshmFP <- c(hshmFP, sum(!orig.inds.ii[tmpHSHMid] %in% (orig.hshm[orig.hshm %in% orig.inds.ii]))/
+                  sum(orig.hshm %in% orig.inds.ii))
     hshmobs<-c(hshmobs, tmpdat[tmpHSHMid,])
   }
   
@@ -166,3 +189,5 @@ for(n.drop in 1:max.drop){
 hist(skew) ##biggggg differences in skew
 hist(pval) ##biggggg changes in pvalue possible
 mean(pval>0.95) ##but these changes are rare! > 96% of the time we say there are positive HSHM
+hist(hshmTP)
+hist(hshmFP)
