@@ -9,6 +9,7 @@ if(!require(hotspomoments)){
 }
 library(hotspomoments)
 library(tidyverse)
+library(fields)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
@@ -77,6 +78,37 @@ print(cayman.hshm)
 cayman_hshm = bind_cols(cayman, as_tibble(hshmid_caymanNEP))
 colnames(cayman_hshm)[9] <- c("hshm_NEP")
 
+
+# plotting
+tt <- unique(cayman$Sample.Week)
+cayman.ref <- unique(cayman$Plot[cayman$Treatment=="reference"])
+cayman.trt <- unique(cayman$Plot[cayman$Treatment=="clipped"])
+
+ref.mat <- matrix(NA, nrow=length(cayman.ref), ncol=length(tt))
+trt.mat <- matrix(NA, nrow=length(cayman.ref), ncol=length(tt))
+
+
+for(ii in 1:length(cayman.ref)){
+  for(jj in 1:length(tt)){
+    if(any(cayman$Treatment=="reference" & cayman$Plot==cayman.ref[ii] & cayman$Sample.Week==tt[jj])){
+      ref.mat[ii,jj] <- cayman$NEP[cayman$Treatment=="reference" & cayman$Plot==cayman.ref[ii] & cayman$Sample.Week==tt[jj]]
+    }
+    if(any(cayman$Treatment=="clipped" & cayman$Plot==cayman.trt[ii] & cayman$Sample.Week==tt[jj])){
+      trt.mat[ii,jj] <- cayman$NEP[cayman$Treatment=="clipped" & cayman$Plot==cayman.trt[ii] & cayman$Sample.Week==tt[jj]]
+    }
+  }
+}
+
+cay.mat <- rbind(ref.mat, trt.mat)
+
+pal<-colorRampPalette(c("red","grey85","blue"))
+
+image.plot(t(cay.mat), col=pal(100), zlim=c(-max(cay.mat, na.rm=T), max(cay.mat, na.rm=T)),
+           xaxt="n", yaxt="n", xlab="Sampling week")
+axis(2, at=seq(0,1,length.out=10), labels=c(NA,NA,"Reference",NA,NA,NA,NA,"Clipped",NA,NA))
+axis(1, at=seq(0,1,length.out=10), labels=1:10)
+abline(h=0.5, lwd=2)
+points(x=c(8/9,8/9,5/9,6/9), y=c(3/9,6/9,4/9,4/9), pch="*", cex=2)
 
 # Swan Lake (Iowa) Dissolved Oxygen ---------------------------------------------------------------
 
