@@ -28,29 +28,57 @@ source("getOrtizSwanLakeData.R")
 
 
 # soil CO2 (Canaan valley, West Virginia, USA) ----------------------------------------------------
-canaan<-canaan.raw[!is.na(canaan.raw$X5cm),]
 
-hist(canaan$X5cm)
-hshmtest_canaan<-hshmtest(canaan$X5cm, stat="skewness") #very skewy.
-hshmid_canaan5cm_ref.normal<-hshmid(canaan$X5cm, side="upper", criteria = "ref.normal", thresh=0.95)
-hshmid_canaan5cm_reduce.skew<-hshmid(canaan$X5cm, criteria="reduce.skew", 
-                                     thresh = quantile(hshmtest_canaan$surr, 0.95))
+#5 cm wells
+canaan5<-canaan.raw[!is.na(canaan.raw$X5cm),]
+
+hist(canaan5$X5cm)
+hshmtest_canaan5<-hshmtest(canaan5$X5cm, stat="skewness") #very skewy.
+hshmid_canaan5cm_ref.normal<-hshmid(canaan5$X5cm, side="upper", criteria = "ref.normal", thresh=0.95)
+hshmid_canaan5cm_reduce.skew<-hshmid(canaan5$X5cm, criteria="reduce.skew", 
+                                     thresh = quantile(hshmtest_canaan5$surr, 0.95))
 
 sum(hshmid_canaan5cm_ref.normal)
 sum(hshmid_canaan5cm_reduce.skew)
 
-hist(canaan.raw$X5cm)
-points(canaan$X5cm[hshmid_canaan5cm_ref.normal], 
+hist(canaan5$X5cm)
+points(canaan5$X5cm[hshmid_canaan5cm_ref.normal], 
        rep(0,sum(hshmid_canaan5cm_ref.normal)), pch=19, col="red")
-points(canaan$X5cm[hshmid_canaan5cm_reduce.skew], 
+points(canaan5$X5cm[hshmid_canaan5cm_reduce.skew], 
        rep(5,sum(hshmid_canaan5cm_reduce.skew)), pch=1, col="red")
 
-canaan.hshm <- canaan[hshmid_canaan5cm_ref.normal,]
+canaan5.hshm <- canaan5[hshmid_canaan5cm_ref.normal,]
 
-table(canaan.hshm$DATE)
-table(canaan.hshm$ELEV, canaan.hshm$VEG)
+table(canaan5.hshm$DATE)
+table(canaan5.hshm$ELEV, canaan5.hshm$VEG)
+table(paste0(canaan5.hshm$ELEV, canaan5.hshm$PLOT))
 
-#add 20 cm data
+
+#20 cm wells
+canaan20<-canaan.raw[!is.na(canaan.raw$X20cm),]
+
+hist(canaan20$X20cm)
+hshmtest_canaan20<-hshmtest(canaan20$X20cm, stat="skewness") #very skewy.
+hshmid_canaan20cm_ref.normal<-hshmid(canaan20$X20cm, side="upper", criteria = "ref.normal", thresh=0.95)
+#hshmid_canaan20cm_reduce.skew<-hshmid(canaan20$X20cm, criteria="reduce.skew", 
+#                                     thresh = quantile(hshmtest_canaan20$surr, 0.95))
+
+sum(hshmid_canaan20cm_ref.normal)
+#sum(hshmid_canaan20cm_reduce.skew)
+
+hist(canaan20$X20cm)
+points(canaan20$X20cm[hshmid_canaan20cm_ref.normal], 
+       rep(0,sum(hshmid_canaan20cm_ref.normal)), pch=19, col="red")
+# points(canaan20$X20cm[hshmid_canaan20cm_reduce.skew], 
+#        rep(5,sum(hshmid_canaan20cm_reduce.skew)), pch=1, col="red")
+
+canaan20.hshm <- canaan20[hshmid_canaan20cm_ref.normal,]
+
+table(canaan20.hshm$DATE)
+table(canaan20.hshm$ELEV, canaan20.hshm$VEG)
+table(paste0(canaan20.hshm$ELEV, canaan20.hshm$PLOT))
+
+
 
 ## Cayman islands seagrass NEP --------------------------------------------------------------------
 cayman <- cayman.raw
@@ -103,12 +131,21 @@ cay.mat <- rbind(ref.mat, trt.mat)
 
 pal<-colorRampPalette(c("red","grey85","blue"))
 
+pdf("../outputs/Fig2_caymanNEP_rough.pdf", width=6.5, height=4)
+
+par(mar=c(4.1,5.1,1.1,1.1), mgp=c(2.25,0.75,0))
+
 image.plot(t(cay.mat), col=pal(100), zlim=c(-max(cay.mat, na.rm=T), max(cay.mat, na.rm=T)),
            xaxt="n", yaxt="n", xlab="Sampling week")
-axis(2, at=seq(0,1,length.out=10), labels=c(NA,NA,"Reference",NA,NA,NA,NA,"Clipped",NA,NA))
+axis(2, at=seq(0,1,length.out=10), labels=c(2,4,6,8,10,1,3,5,7,9))#labels=c(NA,NA,"Reference",NA,NA,NA,NA,"Clipped",NA,NA))
 axis(1, at=seq(0,1,length.out=10), labels=1:10)
 abline(h=0.5, lwd=2)
 points(x=c(8/9,8/9,5/9,6/9), y=c(3/9,6/9,4/9,4/9), pch="*", cex=2)
+mtext("Reference", side=2, at=0.25, line=2.25)
+mtext("Clipped", side=2, at=0.75, line=2.25)
+mtext("Plot Number", side=2, line=3.5)
+
+dev.off()
 
 # Swan Lake (Iowa) Dissolved Oxygen ---------------------------------------------------------------
 
@@ -178,6 +215,20 @@ quantile(hshmTP, c(0.025, 0.975))
 hist(hshmFP)
 quantile(hshmFP, c(0.025, 0.975))
 
+plot(nn, hshmTP)
+plot(nn, hshmFP)
+
+sensStats.space <- data.frame(nn=nn, skew=skew, pval=pval, hshmTP=hshmTP, hshmFP=hshmFP)
+
+plot(unique(nn), aggregate(hshmTP~nn, FUN="mean")$hshmTP, type="l", ylim=c(0.9,1), lwd=2,
+     xlab="Sites dropped", ylab="HSHM ID agreement")
+lines(unique(nn), aggregate(hshmTP~nn, FUN=function(x){quantile(x,0.95)})$hshmTP, lty=2)
+lines(unique(nn), aggregate(hshmTP~nn, FUN=function(x){quantile(x,0.05)})$hshmTP, lty=2)
+
+plot(unique(nn), aggregate(hshmFP~nn, FUN="mean")$hshmFP, type="l", ylim=c(0,0.15), lwd=2,
+     xlab="Sites dropped", ylab="HSHM ID disagreement")
+lines(unique(nn), aggregate(hshmFP~nn, FUN=function(x){quantile(x,0.95)})$hshmFP, lty=2)
+lines(unique(nn), aggregate(hshmFP~nn, FUN=function(x){quantile(x,0.05)})$hshmFP, lty=2)
 
 #now dropping by date
 
@@ -230,3 +281,56 @@ hist(hshmTP)
 quantile(hshmTP, c(0.025,0.5,0.975))
 hist(hshmFP)
 quantile(hshmFP, c(0.025,0.5,0.975))
+
+plot(nn, hshmTP)
+
+
+sensStats.time <- data.frame(nn=nn, skew=skew, pval=pval, hshmTP=hshmTP, hshmFP=hshmFP)
+
+plot(unique(nn), aggregate(hshmTP~nn, FUN="mean")$hshmTP, type="l", ylim=c(0,1), lwd=2,
+     xlab="Sampling dates dropped", ylab="HSHM ID agreement")
+lines(unique(nn), aggregate(hshmTP~nn, FUN=function(x){quantile(x,0.95)})$hshmTP, lty=2)
+lines(unique(nn), aggregate(hshmTP~nn, FUN=function(x){quantile(x,0.05)})$hshmTP, lty=2)
+
+plot(unique(nn), aggregate(hshmFP~nn, FUN="mean")$hshmFP, type="l", ylim=c(0,1.5), lwd=2,
+     xlab="Sampling dates dropped", ylab="HSHM ID disagreement")
+lines(unique(nn), aggregate(hshmFP~nn, FUN=function(x){quantile(x,0.95)})$hshmFP, lty=2)
+lines(unique(nn), aggregate(hshmFP~nn, FUN=function(x){quantile(x,0.05)})$hshmFP, lty=2)
+
+
+pdf("../outputs/fig5_sensitivity_rough.pdf", width=6.5, height=8)
+
+par(mfcol=c(4,2), mar=c(3.5,3.5,1.1,1.1), mgp=c(2,0.8,0), oma=c(0,0,1.1,0))
+
+hist(sensStats.space$skew, main="", xlab="Skewness")
+hist(sensStats.space$pval, main="", xlab="Quantile", breaks=seq(0,1,0.05))
+plot(unique(sensStats.space$nn), aggregate(hshmTP~nn, data=sensStats.space, FUN="mean")$hshmTP, type="l", ylim=c(0.9,1), lwd=2,
+     xlab="Locations dropped", ylab="HSHM ID agreement")
+lines(unique(sensStats.space$nn), aggregate(hshmTP~nn, data=sensStats.space, FUN=function(x){quantile(x,0.95)})$hshmTP, lty=2)
+lines(unique(sensStats.space$nn), aggregate(hshmTP~nn, data=sensStats.space, FUN=function(x){quantile(x,0.05)})$hshmTP, lty=2)
+
+plot(unique(sensStats.space$nn), aggregate(hshmFP~nn, data=sensStats.space, FUN="mean")$hshmFP, type="l", ylim=c(0,0.15), lwd=2,
+     xlab="Locations dropped", ylab="HSHM ID disagreement")
+lines(unique(sensStats.space$nn), aggregate(hshmFP~nn, data=sensStats.space, FUN=function(x){quantile(x,0.95)})$hshmFP, lty=2)
+lines(unique(sensStats.space$nn), aggregate(hshmFP~nn, data=sensStats.space, FUN=function(x){quantile(x,0.05)})$hshmFP, lty=2)
+
+
+hist(sensStats.time$skew, main="", xlab="Skewness")
+hist(sensStats.time$pval, main="", xlab="Quantile", breaks=seq(0,1,0.05))
+plot(unique(sensStats.time$nn), 
+     aggregate(hshmTP~nn, data=sensStats.time, FUN="mean")$hshmTP, type="l", ylim=c(0,1), lwd=2,
+     xlab="Dates dropped", ylab="HSHM ID agreement")
+lines(unique(sensStats.time$nn), aggregate(hshmTP~nn, data=sensStats.time, FUN=function(x){quantile(x,0.95)})$hshmTP, lty=2)
+lines(unique(sensStats.time$nn), aggregate(hshmTP~nn, data=sensStats.time, FUN=function(x){quantile(x,0.05)})$hshmTP, lty=2)
+
+plot(unique(sensStats.time$nn), 
+     aggregate(hshmFP~nn, data=sensStats.time, FUN="mean")$hshmFP, type="l", ylim=c(0,1.5), lwd=2,
+     xlab="Dates dropped", ylab="HSHM ID disagreement")
+lines(unique(sensStats.time$nn), aggregate(hshmFP~nn, data=sensStats.time, FUN=function(x){quantile(x,0.95)})$hshmFP, lty=2)
+lines(unique(sensStats.time$nn), aggregate(hshmFP~nn, data=sensStats.time, FUN=function(x){quantile(x,0.05)})$hshmFP, lty=2)
+
+mtext("Dropping sites", outer=TRUE, at=0.25, cex=2/3)
+mtext("Dropping sampling dates", outer=TRUE, at=0.75, cex=2/3)
+
+dev.off()
+
