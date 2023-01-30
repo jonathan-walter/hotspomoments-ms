@@ -131,12 +131,25 @@ cay.mat <- rbind(ref.mat, trt.mat)
 
 pal<-colorRampPalette(c("red","grey85","blue"))
 
-pdf("../outputs/Fig2_caymanNEP_rough.pdf", width=6.5, height=4)
 
-par(mar=c(4.1,5.1,1.1,1.1), mgp=c(2.25,0.75,0))
+xx <- seq(-200,350,by=1)
+
+
+pdf("../outputs/Fig2_caymanNEP.pdf", width=6.5, height=4)
+
+par(mar=c(3.5,3.5,1.1,1.1), mgp=c(2.25,0.6,0), mfrow=c(1,2), oma=c(0,0,0,1.5))
+
+hist(c(cay.mat), freq=FALSE, main="", xlim=c(-200,350),
+     xlab=expression(NEP~(mmol~C~m^-2~d^-1)))
+lines(xx, dnorm(xx, mean(cay.mat, na.rm=T), sd(cay.mat, na.rm=T)), lwd=1.5, lty=2)
+points(x=sort(c(cay.mat))[1:2], y=c(0,0), col="red", pch=16)
+points(x=sort(c(cay.mat), decreasing=TRUE)[1:2], y=c(0,0), col="blue", pch=16)
+mtext("a)", at=par("usr")[1]-0.05*diff(par("usr")[1:2]))
+
+par(mar=c(3.5,3.1,1.1,1.1), mgp=c(2.2,0.6,0))
 
 image.plot(t(cay.mat), col=pal(100), zlim=c(-max(cay.mat, na.rm=T), max(cay.mat, na.rm=T)),
-           xaxt="n", yaxt="n", xlab="Sampling week")
+           xaxt="n", yaxt="n", xlab="Sampling week", legend.shrink=0.8, legend.cex=0.8)
 axis(2, at=seq(0,1,length.out=10), labels=c(2,4,6,8,10,1,3,5,7,9))#labels=c(NA,NA,"Reference",NA,NA,NA,NA,"Clipped",NA,NA))
 axis(1, at=seq(0,1,length.out=10), labels=1:10)
 abline(h=0.5, lwd=2)
@@ -144,6 +157,7 @@ points(x=c(8/9,8/9,5/9,6/9), y=c(3/9,6/9,4/9,4/9), pch="*", cex=2)
 mtext("Reference", side=2, at=0.25, line=2.25)
 mtext("Clipped", side=2, at=0.75, line=2.25)
 mtext("Plot Number", side=2, line=3.5)
+mtext("b)", at=par("usr")[1]-0.05*diff(par("usr")[1:2]))
 
 dev.off()
 
@@ -298,36 +312,51 @@ lines(unique(nn), aggregate(hshmFP~nn, FUN=function(x){quantile(x,0.95)})$hshmFP
 lines(unique(nn), aggregate(hshmFP~nn, FUN=function(x){quantile(x,0.05)})$hshmFP, lty=2)
 
 
-pdf("../outputs/fig5_sensitivity_rough.pdf", width=6.5, height=8)
+pdf("../outputs/fig5_sensitivity.pdf", width=6.5, height=8)
 
 par(mfcol=c(4,2), mar=c(3.5,3.5,1.1,1.1), mgp=c(2,0.8,0), oma=c(0,0,1.1,0))
 
 hist(sensStats.space$skew, main="", xlab="Skewness")
+qq <- par("usr")
+text(qq[1]+0.05*diff(qq[1:2]), qq[4]-0.05*diff(qq[3:4]), "a)")
 hist(sensStats.space$pval, main="", xlab="Quantile", breaks=seq(0,1,0.05))
+qq <- par("usr")
+text(qq[1]+0.05*diff(qq[1:2]), qq[4]-0.05*diff(qq[3:4]), "b)")
 plot(unique(sensStats.space$nn), aggregate(hshmTP~nn, data=sensStats.space, FUN="mean")$hshmTP, type="l", ylim=c(0.9,1), lwd=2,
      xlab="Locations dropped", ylab="HSHM ID agreement")
 lines(unique(sensStats.space$nn), aggregate(hshmTP~nn, data=sensStats.space, FUN=function(x){quantile(x,0.95)})$hshmTP, lty=2)
 lines(unique(sensStats.space$nn), aggregate(hshmTP~nn, data=sensStats.space, FUN=function(x){quantile(x,0.05)})$hshmTP, lty=2)
+qq <- par("usr")
+text(qq[1]+0.05*diff(qq[1:2]), qq[4]-0.2*diff(qq[3:4]), "c)")
 
 plot(unique(sensStats.space$nn), aggregate(hshmFP~nn, data=sensStats.space, FUN="mean")$hshmFP, type="l", ylim=c(0,0.15), lwd=2,
      xlab="Locations dropped", ylab="HSHM ID disagreement")
 lines(unique(sensStats.space$nn), aggregate(hshmFP~nn, data=sensStats.space, FUN=function(x){quantile(x,0.95)})$hshmFP, lty=2)
 lines(unique(sensStats.space$nn), aggregate(hshmFP~nn, data=sensStats.space, FUN=function(x){quantile(x,0.05)})$hshmFP, lty=2)
-
+qq <- par("usr")
+text(qq[1]+0.05*diff(qq[1:2]), qq[4]-0.1*diff(qq[3:4]), "d)")
 
 hist(sensStats.time$skew, main="", xlab="Skewness")
+qq <- par("usr")
+text(qq[1]+0.05*diff(qq[1:2]), qq[4]-0.05*diff(qq[3:4]), "e)")
 hist(sensStats.time$pval, main="", xlab="Quantile", breaks=seq(0,1,0.05))
+qq <- par("usr")
+text(qq[1]+0.05*diff(qq[1:2]), qq[4]-0.05*diff(qq[3:4]), "f)")
 plot(unique(sensStats.time$nn), 
      aggregate(hshmTP~nn, data=sensStats.time, FUN="mean")$hshmTP, type="l", ylim=c(0,1), lwd=2,
      xlab="Dates dropped", ylab="HSHM ID agreement")
 lines(unique(sensStats.time$nn), aggregate(hshmTP~nn, data=sensStats.time, FUN=function(x){quantile(x,0.95)})$hshmTP, lty=2)
 lines(unique(sensStats.time$nn), aggregate(hshmTP~nn, data=sensStats.time, FUN=function(x){quantile(x,0.05)})$hshmTP, lty=2)
+qq <- par("usr")
+text(qq[1]+0.05*diff(qq[1:2]), qq[4]-0.2*diff(qq[3:4]), "g)")
 
 plot(unique(sensStats.time$nn), 
      aggregate(hshmFP~nn, data=sensStats.time, FUN="mean")$hshmFP, type="l", ylim=c(0,1.5), lwd=2,
      xlab="Dates dropped", ylab="HSHM ID disagreement")
 lines(unique(sensStats.time$nn), aggregate(hshmFP~nn, data=sensStats.time, FUN=function(x){quantile(x,0.95)})$hshmFP, lty=2)
 lines(unique(sensStats.time$nn), aggregate(hshmFP~nn, data=sensStats.time, FUN=function(x){quantile(x,0.05)})$hshmFP, lty=2)
+qq <- par("usr")
+text(qq[1]+0.05*diff(qq[1:2]), qq[4]-0.1*diff(qq[3:4]), "h)")
 
 mtext("Dropping sites", outer=TRUE, at=0.25, cex=2/3)
 mtext("Dropping sampling dates", outer=TRUE, at=0.75, cex=2/3)
